@@ -1,12 +1,13 @@
 const assert = require('assert'); // assert パッケージのインポート
 
 class Dollar{
-    constructor(amount){
+    constructor(amount){ // Dollar のコンストラクター として、int型の amount を引数として渡したら、Dollar の amount フィールドにセットするようにする。
         this.amount=amount;
     }
 
     times(multiplier){
-        return new Dollar(10);
+        // return new Dollar(5 * 2);
+        return new Dollar(this.amount * multiplier); // ハードコーディングしていた箇所を修正
     }
 }
 
