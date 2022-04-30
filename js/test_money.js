@@ -1,54 +1,58 @@
 const assert = require('assert'); // assert パッケージのインポート
+const Money = require('./money');  // money モジュールのインポート
+const Portfolio = require('./portfolio'); //Portfolio モジュールのインポート
 
-class Money {
-    constructor(amount, currency){
-        this.amount=amount;
-        this.currency=currency;
+// 各testを行うメソッドが定義されたクラス. テストを追加していって、すべてのテストを自動的に実行してくれる機能を持つ
+class MoneyTest{
+    testMultiplication(){
+        let tenEuros = new Money(10, "EUR");
+        let twentyEuros = new Money(20, "EUR");
+        assert.deepStrictEqual(tenEuros.times(2), twentyEuros);
     }
 
-    times(multiplier) {
-        return new Money(this.amount * multiplier, this.currency);
+    testDivision(){
+        let originalMoney = new Money(4002, "KRW");
+        let actualMoneyAfterDivision = originalMoney.divide(4);
+        let expectedMoneyAfterDivision = new Money(1000.5, "KRW");
+        assert.deepStrictEqual(actualMoneyAfterDivision, expectedMoneyAfterDivision); // assert.strictEqual を用いてオブジェクトのフィールドを個別にテストするのではなく、 assert.deepStrictEqual を用いて、オブジェクト単位で同じか（各フィールドの値が等しいか）テストしている
     }
 
-    divide(divisor) {
-        return new Money(this.amount / divisor, this.currency) //JavaScript は動的型付け言語なので、go で必要になったキャストのリファクタは必要ない 
+    testAddition(){
+        let tenDollars = new Money(10, "USD");
+        let fiveDollars = new Money(5, "USD");
+        let portfolio = new Portfolio();
+        let fifteenDollars = new Money(15, "USD");
+        portfolio.add(fiveDollars, tenDollars);
+        assert.deepStrictEqual(portfolio.evaluate("USD"), fifteenDollars); 
+    }
+
+    runAllTests(){
+        let testMethods = this.getAllTestMethods(); // 全てのテストの名前を取得する
+        testMethods.forEach(m => {
+            console.log("Running:%s()", m); // これから実行するテストをコンソール上に表示する
+            let method = Reflect.get(this, m); // Reflect オブジェクトを用いて、このクラスに含まれる、名前が m と一致するテストを取得する
+            try {
+                Reflect.apply(method, this, []); // Reflectオブジェクトを用いて、取得したテストメソッドを引数なしで呼び出す
+            } catch(e) { //例外が投げられたらそれをキャッチする
+                if (e  instanceof assert.AssertionError) { // アサーションエラーの時には、コンソールに出力する
+                    console.log(e);
+                } else {
+                    throw e; // それ以外のエラーの時には、そのまま投げる
+                }
+            }
+        });
+    }
+    
+    // クラスに含まれるテストの名前を全て取得して、配列に並べて保存する
+    getAllTestMethods() {
+        let moneyPrototype = MoneyTest.prototype; // MoneyTestオブジェクトのプロトタイプを取得
+        let allProps = Object.getOwnPropertyNames(moneyPrototype); // MoneyTest prototype に定義されているプロパティを全て取得
+        let testMethods = allProps.filter(p => {
+            return typeof moneyPrototype[p] === 'function' && p.startsWith("test");
+        }); // testMethods として、関数であり、かつ、名前が"test"で始まるものだけをフィルタリングする。
+        return testMethods;
     }
 }
 
-class Portfolio{
-
-    constructor(){
-        this.moneys = [];
-    }
-
-    add(...moneys){ // money を複数引数としてとることを表す. rest parameter syntax
-        this.moneys = this.moneys.concat(moneys); // 引数にとった money の列を連結して,moneys フィールドに格納する
-    }
-
-    evaluate(currency) {
-        // return new Money(15, "USD"); // テストを通すためだけにハードコードしている(リファクタの段階で修正)
-        let total = this.moneys.reduce((sum, money) => { // reduce は配列 moneys に対して定義されている組み込みメソッドで、sum の初期値を 0 として、moneysの各要素の money を用いて計算を"畳み込んでいく". 関数型でいうと foldleft  
-            return sum + money.amount;
-        }, 0);
-        return new Money(total, currency);
-    }
-}
-
-let fiveDollars = new Money(5, "USD");
-let tenDollars = new Money(10, "USD");
-assert.deepStrictEqual(fiveDollars.times(2), tenDollars);
-
-
-let tenEuros = new Money(10, "EUR");
-let twentyEuros = new Money(20, "EUR");
-assert.deepStrictEqual(tenEuros.times(2), twentyEuros);
-
-let originalMoney = new Money(4002, "KRW");
-let actualMoneyAfterDivision = originalMoney.divide(4);
-let expectedMoneyAfterDivision = new Money(1000.5, "KRW");
-assert.deepStrictEqual(actualMoneyAfterDivision, expectedMoneyAfterDivision); // assert.strictEqual を用いてオブジェクトのフィールドを個別にテストするのではなく、 assert.deepStrictEqual を用いて、オブジェクト単位で同じか（各フィールドの値が等しいか）テストしている
-
-let fifteenDollars = new Money(15, "USD");
-let portfolio = new Portfolio();
-portfolio.add(fiveDollars, tenDollars);
-assert.deepStrictEqual(portfolio.evaluate("USD"), fifteenDollars); 
+// MoneyTestをインスタンス化して全てのテストを実行
+new MoneyTest().runAllTests();
