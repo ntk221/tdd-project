@@ -26,6 +26,26 @@ class MoneyTest{
         assert.deepStrictEqual(portfolio.evaluate("USD"), fifteenDollars); 
     }
 
+    testAdditionOfDollarsAndEuros() {
+        let fiveDollars = new Money(5, "USD");
+        let tenEuros = new Money(10, "EUR");
+        let portfolio = new Portfolio();
+        portfolio.add(fiveDollars, tenEuros);
+        let expectedValue = new Money(17, "USD");
+
+        assert.deepStrictEqual(portfolio.evaluate("USD"), expectedValue);
+    }
+
+    testAddtionOfDollarsAndWons() {
+        let oneDollar = new Money(1, "USD");
+        let elevenHundredWon = new Money(1100, "KRW");
+        let portfolio = new Portfolio();
+        portfolio.add(oneDollar, elevenHundredWon);
+        let expectedValue = new Money(2200, "KRW");
+
+        assert.deepStrictEqual(portfolio.evaluate("KRW"), expectedValue);
+    }
+
     runAllTests(){
         let testMethods = this.getAllTestMethods(); // 全てのテストの名前を取得する
         testMethods.forEach(m => {
